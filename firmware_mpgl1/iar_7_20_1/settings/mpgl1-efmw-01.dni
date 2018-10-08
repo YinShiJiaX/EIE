@@ -10,7 +10,7 @@ LimitSize=0
 ByteLimit=50
 [DebugChecksum]
 <<<<<<< HEAD
-Checksum=-1426901783
+Checksum=310958748
 =======
 Checksum=1464341029
 >>>>>>> c080c694e6eb3b5db5c649699ab09d322b1ac0ae
@@ -51,6 +51,11 @@ Enabled=_ 0
 [Trace1]
 Enabled=0
 ShowSource=1
+[Disassemble mode]
+mode=0
+[Breakpoints2]
+Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\application\mpgl1_board_test.c}.408.7" 0 0 1 "" 0 "" 0
+Count=1
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -58,6 +63,12 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
+[Aliases]
+A0=_ "C:\Users\jiage\Desktop\EIE\Razor_Atmel-application_board_test_mpg1\firmware_mpg_common\cmsis\core_cm3.h" ""
+A1=_ "C:\Users\jiage\Desktop\EIE\Razor_Atmel-application_board_test_mpg1\firmware_mpgl1\drivers\sdcard.c" ""
+A2=_ "C:\Users\jiage\Desktop\Firmware\Razor_Atmel-application_board_test_mpg1\firmware_mpg_common\cmsis\core_cm3.h" ""
+Count=3
+SuppressDialog=1
 [DriverProfiling]
 Enabled=0
 Mode=1
@@ -68,14 +79,3 @@ Exclusions=
 Enabled=0
 [CallStackStripe]
 ShowTiming=1
-[Disassemble mode]
-mode=0
-[Breakpoints2]
-Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\application\mpgl1_board_test.c}.408.7" 0 0 1 "" 0 "" 0
-Count=1
-[Aliases]
-A0=_ "C:\Users\jiage\Desktop\EIE\Razor_Atmel-application_board_test_mpg1\firmware_mpg_common\cmsis\core_cm3.h" ""
-A1=_ "C:\Users\jiage\Desktop\EIE\Razor_Atmel-application_board_test_mpg1\firmware_mpgl1\drivers\sdcard.c" ""
-A2=_ "C:\Users\jiage\Desktop\Firmware\Razor_Atmel-application_board_test_mpg1\firmware_mpg_common\cmsis\core_cm3.h" ""
-Count=3
-SuppressDialog=1

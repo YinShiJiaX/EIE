@@ -158,11 +158,39 @@ static void UserApp1SM_Idle(void)
   static u8 u8LedCurrentLevel = 0;
   static u8 u8DutyCycleCounter = 0;
   static u16 u16Counter = COLOR_CYCLE_TIME;
-  
+  static u16 u16Icicle = 0;
+  u16BlinkCount++;
   u16Counter--;
   /* Check for update color every COLOR_CYCLE_TIME */
   if(u16Counter == 0)
   {
+    if(u16Icicle == 53)
+    {
+      u16Icicle == 0;
+    }
+    if(u16Icicle <= 20)
+    {
+      LedPWM(WHITE,(LedRateType)u16Icicle);
+    }
+    if((u16Icicle > 20) && (u16Icicle <= 34))
+    {
+      LedPWM(PURPLE,(LedRateType)(u16Icicle - 20));
+    }
+    if((u16Icicle > 34) && (u16Icicle <= 44))
+    {
+      LedPWM(BLUE,(LedRateType)(u16Icicle - 34));
+    }    
+    if((u16Icicle > 44) && (u16Icicle <= 50))
+    {
+      LedPWM(CYAN,(LedRateType)(u16Icicle - 44));
+    }
+    if((u16Icicle > 50) && (u16Icicle <= 52))
+    {
+      LedPWM(GREEN,(LedRateType)(u16Icicle - 50));
+    }
+    u16Icicle++;
+    
+    
     u16Counter = COLOR_CYCLE_TIME;
     
     /* Update the current level based on which way it's headed */
@@ -196,6 +224,7 @@ static void UserApp1SM_Idle(void)
       }
     }
     LedPWM( (LedNumberType)aeCurrentLed[u8CurrentLedIndex], (LedRateType)u8LedCurrentLevel);
+    LedPWM(RED,(LedRateType)u8LedCurrentLevel);
   }
   
   
