@@ -396,6 +396,7 @@ void LedInitialize(void)
   
 #else /* PRODUCTION_MODE */
 #if MPGL1
+  /*
   LedOn(RED);
   LedOn(ORANGE);
   LedOn(YELLOW);
@@ -404,6 +405,7 @@ void LedInitialize(void)
   LedOn(BLUE);
   LedOn(PURPLE);
   LedOn(WHITE);
+  */
 #endif /* MPGL1 */
 
 #if MPGL2

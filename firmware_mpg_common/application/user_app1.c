@@ -52,15 +52,20 @@ extern volatile u32 G_u32ApplicationFlags;             /* From main.c */
 extern volatile u32 G_u32SystemTime1ms;                /* From board-specific source file */
 extern volatile u32 G_u32SystemTime1s;                 /* From board-specific source file */
 
+extern u32 G_u32AntApiCurrentMessageTimeStamp;                    
+extern AntApplicationMessageType G_eAntApiCurrentMessageClass;    
+extern u8 G_au8AntApiCurrentMessageBytes[ANT_APPLICATION_MESSAGE_BYTES];  
+extern AntExtendedDataType G_sAntApiCurrentMessageExtData; 
 
 /***********************************************************************************************************************
 Global variable definitions with scope limited to this local application.
 Variable names shall start with "UserApp1_" and be declared as static.
 ***********************************************************************************************************************/
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
-//static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
-
-
+static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
+static AntAssignChannelInfoType UserApp1_sChannelInfo;
+static u8 au8TestMessage[] = {0, 0, 0, 0, 0xA5, 0, 0, 0};
+u8 au8DataContent[] = "xxxx";
 /**********************************************************************************************************************
 Function Definitions
 **********************************************************************************************************************/
@@ -87,34 +92,52 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-  /* All discrete LEDs to off */
-  LedOff(WHITE);
-  LedOff(PURPLE);
-  LedOff(BLUE);
-  LedOff(CYAN);
-  LedOff(GREEN);
-  LedOff(YELLOW);
-  LedOff(ORANGE);
-  LedOn(RED);
-  /* Start with red LED on 100%,green and blue off */
-  LedPWM(LCD_RED,LED_PWM_100);
-  LedPWM(LCD_GREEN,LED_PWM_0);
-  LedPWM(LCD_BLUE,LED_PWM_0);
-
-  /* If good initialization, set state to Idle */
-  if( 1 )
+  DebugPrintf(" Task initialized failed\n ");
+  u8 *au8WelcomeMessage = "ANT Master";
+  /* Set the message up on the LCD,Delay is required to let the clear command send */
+  LCDCommand(LCD_CLEAR_CMD);
+  for(u32 i = 0; i < 10000; i++);
+  LCDMessage(LINE1_START_ADDR, au8WelcomeMessage);
+  
+  /* Configure ANT for this application */
+  UserApp1_sChannelInfo.AntChannel          = ANT_CHANNEL_USERAPP;
+  UserApp1_sChannelInfo.AntChannelPeriodHi  = ANT_CHANNEL_PERIOD_HI_USERAPP;
+  UserApp1_sChannelInfo.AntChannelPeriodLo  = ANT_CHANNEL_PERIOD_LO_USERAPP;
+  UserApp1_sChannelInfo.AntChannelType      = ANT_CHANNEL_TYPE_USERAPP;
+  UserApp1_sChannelInfo.AntDeviceIdHi       = ANT_DEVICEID_HI_USERAPP;
+  UserApp1_sChannelInfo.AntDeviceIdLo       = ANT_DEVICEID_LO_USERAPP;
+  UserApp1_sChannelInfo.AntDeviceType       = ANT_DEVICE_TYPE_USERAPP;
+  UserApp1_sChannelInfo.AntFrequency        = ANT_FREQUENCY_USERAPP;
+  UserApp1_sChannelInfo.AntTransmissionType = ANT_TRANSMISSION_TYPE_USERAPP;
+  UserApp1_sChannelInfo.AntTxPower          = ANT_TX_POWER_USERAPP;
+  UserApp1_sChannelInfo.AntNetwork          = ANT_NETWORK_DEFAULT;
+  
+  for(u8 i = 0; i < ANT_NETWORK_NUMBER_BYTES; i++)
   {
-    UserApp1_StateMachine = UserApp1SM_Idle;
+    UserApp1_sChannelInfo.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
+  }
+  
+  /* Try to queue the ANT channel setup */
+  if(AntAssignChannel(&UserApp1_sChannelInfo))
+  {
+    UserApp1_u32Timeout = G_u32SystemTime1ms;
+    UserApp1_StateMachine = UserApp1SM_AntChannelAssign;
   }
   else
   {
-    /* The task isn't properly initialized, so shut it down and don't run */
+    /* The Task isn't properly initialized, so shut it down and don't run */
+    DebugPrintf(" Task initialized failed\n ");
     UserApp1_StateMachine = UserApp1SM_Error;
   }
-
 } /* end UserApp1Initialize() */
 
-  
+/********************************************************************************
+State Machine Function Definitions 
+*********************************************************************************/
+
+
+
+
 /*----------------------------------------------------------------------------------------------------------------------
 Function UserApp1RunActiveState()
 
@@ -144,104 +167,50 @@ void UserApp1RunActiveState(void)
 /**********************************************************************************************************************
 State Machine Function Definitions
 **********************************************************************************************************************/
+/* Wait for ANT channel assignment */
+static void UserApp1SM_AntChannelAssign()
+{
+  if(AntRadioStatusChannel(ANT_CHANNEL_USERAPP) == ANT_CONFIGURED )
+  {
+    /* Channel assignemnt is successful ,so open channel and proceed to idle state */
+    AntOpenChannelNumber(ANT_CHANNEL_USERAPP);
+    UserApp1_StateMachine = UserApp1SM_Idle;
+  }
+  
+  /* Watch for time out */
+  if(IsTimeUp(&UserApp1_u32Timeout,3000))
+  {
+    DebugPrintf(" User app setup failed\n ");
+    UserApp1_StateMachine = UserApp1SM_Error;
+  }
+} /* end UserApp1SM_AntChannelAssign */
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-  static u8 u8Counter = 0;
-  static u16 u16BlinkCount = 0;
-  static u8 u8ColorIndex = 0;
-  static LedNumberType aeCurrentLed[] = {LCD_GREEN, LCD_RED, LCD_BLUE, LCD_GREEN, LCD_RED, LCD_BLUE};
-  static bool abLedRateIncreasing[] = {TRUE, FALSE, TRUE, FALSE, TRUE, FALSE};
-  static u8 u8CurrentLedIndex = 0;
-  static u8 u8LedCurrentLevel = 0;
-  static u8 u8DutyCycleCounter = 0;
-  static u16 u16Counter = COLOR_CYCLE_TIME;
-  static u16 u16Icicle = 0;
-  u16BlinkCount++;
-  u16Counter--;
-  /* Check for update color every COLOR_CYCLE_TIME */
-  if(u16Counter == 0)
-  {
-    if(u16Icicle == 53)
+
+     /* New message from ANT task: check what it is */
+    if( AntReadAppMessageBuffer() )
     {
-      u16Icicle == 0;
-    }
-    if(u16Icicle <= 20)
-    {
-      LedPWM(WHITE,(LedRateType)u16Icicle);
-    }
-    if((u16Icicle > 20) && (u16Icicle <= 34))
-    {
-      LedPWM(PURPLE,(LedRateType)(u16Icicle - 20));
-    }
-    if((u16Icicle > 34) && (u16Icicle <= 44))
-    {
-      LedPWM(BLUE,(LedRateType)(u16Icicle - 34));
-    }    
-    if((u16Icicle > 44) && (u16Icicle <= 50))
-    {
-      LedPWM(CYAN,(LedRateType)(u16Icicle - 44));
-    }
-    if((u16Icicle > 50) && (u16Icicle <= 52))
-    {
-      LedPWM(GREEN,(LedRateType)(u16Icicle - 50));
-    }
-    u16Icicle++;
-    
-    
-    u16Counter = COLOR_CYCLE_TIME;
-    
-    /* Update the current level based on which way it's headed */
-    if(abLedRateIncreasing[u8CurrentLedIndex])
-    {
-      u8LedCurrentLevel++;
-    }
-    else
-    {
-      u8LedCurrentLevel--;
-    }
-    
-    /* Change direction once we are at the end */
-    u8DutyCycleCounter++;
-    if(u8DutyCycleCounter == 20)
-    {
-      u8DutyCycleCounter = 0;
-      
-      /* Watch for the indexing variable to reset */
-      u8CurrentLedIndex++;
-      if(u8CurrentLedIndex == sizeof(aeCurrentLed))
-      {
-        u8CurrentLedIndex = 0;
-      }
-      
-      /* Set the current level based on what direction we are going */
-      u8LedCurrentLevel = 20;
-      if(abLedRateIncreasing[u8CurrentLedIndex])
-      {
-        u8LedCurrentLevel = 0;
+    /* New data message: check what it is */
+      if(G_eAntApiCurrentMessageClass == ANT_DATA)
+      { 
+        LCDMessage(LINE2_START_ADDR, au8DataContent); 
       }
     }
-    LedPWM( (LedNumberType)aeCurrentLed[u8CurrentLedIndex], (LedRateType)u8LedCurrentLevel);
-    LedPWM(RED,(LedRateType)u8LedCurrentLevel);
-  }
-  
-  
-    
+  } /* end AntReadAppMessageBuffer() */
 
-  
-  
 
-  
 
-} /* end UserApp1SM_Idle() */
+
     
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Handle an error */
 static void UserApp1SM_Error(void)          
 {
+  LedOff(BLUE);
   
 } /* end UserApp1SM_Error() */
 

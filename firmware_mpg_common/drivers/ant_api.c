@@ -236,8 +236,8 @@ All Global variable names shall start with "G_<type>AntApi"
 ***********************************************************************************************************************/
 volatile u32 G_u32AntApiFlags;                                          /* Global state flags */
 
-u32 G_u32AntApiCurrentMessageTimeStamp = 0;                             /* Current read message's G_u32SystemTime1ms */
-AntApplicationMessageType G_eAntApiCurrentMessageClass = ANT_EMPTY;     /* Type of data */
+u32 G_u32AntApiCurrentMessageTimeStamp;                                 /* Current read message's G_u32SystemTime1ms */
+AntApplicationMessageType G_eAntApiCurrentMessageClass;                 /* Type of data */
 u8 G_au8AntApiCurrentMessageBytes[ANT_APPLICATION_MESSAGE_BYTES];       /* Array for message payload data */
 AntExtendedDataType G_sAntApiCurrentMessageExtData;                     /* Extended data struct for the current message */
 

@@ -73,6 +73,7 @@ Promises:
 void BoardTestInitialize(void)
 {
   /* Start with all LEDs on */
+  /*
   LedOn(WHITE);
   LedOn(PURPLE);
   LedOn(BLUE);
@@ -84,6 +85,7 @@ void BoardTestInitialize(void)
   LedOn(LCD_BLUE);
   LedOn(LCD_GREEN);
   LedOn(LCD_RED);
+  */
 
   /* Load the ANT setup parameters */
   /* Configure the ANT radio */
@@ -153,7 +155,7 @@ void BoardTestSM_SetupAnt(void)
     DebugPrintf("Board test ANT Master ready\n\r");
     DebugPrintf("Device ID: ");
     DebugPrintNumber(ANT_DEVICEID_DEC_BOARDTEST);
-    DebugPrintf(", Device Type 96, Trans Type 1, Frequency 50\n\r");
+    DebugPrintf(", Device Type 1, Trans Type 1, Frequency 50\n\r");
 
     BoardTest_StateMachine = BoardTestSM_Idle;
   }
