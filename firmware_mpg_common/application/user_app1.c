@@ -64,8 +64,9 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 static AntAssignChannelInfoType UserApp1_sChannelInfo;
-static u8 au8TestMessage[] = {0, 0, 0, 0, 0xA5, 0, 0, 0};
-u8 au8DataContent[] = "xxxx";
+static u32 u32AntDataCount;
+static u32 u32AntTickCount;
+u8 au8DataContent[] = "xxxxxxxxxxxxxxxx";
 /**********************************************************************************************************************
 Function Definitions
 **********************************************************************************************************************/
@@ -189,17 +190,82 @@ static void UserApp1SM_AntChannelAssign()
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+    static u8 au8TestMessage[] = {0x5B, 0, 0, 0, 0xff, 0, 0, 0};
+    /*
+    au8TestMessage[1] = 0x00;
+    if(IsButtonPressed(BUTTON0))
+    {
+      au8TestMessage[1] = 0xff;
+    }
+    
+    au8TestMessage[2] = 0x00;
+    if(IsButtonPressed(BUTTON1))
+    {
+      au8TestMessage[2] = 0xff;
+    }
+    
+    au8TestMessage[3] = 0x00;
+    if(IsButtonPressed(BUTTON2))
+    {
+      au8TestMessage[3] = 0xff;
+    }
+    au8TestMessage[4] = 0x00;
+    if(IsButtonPressed(BUTTON3))
+    {
+      au8TestMessage[4] = 0xff;
+    }
+    */
+    /* We got some data: parse it into au8DataCount[] */
 
      /* New message from ANT task: check what it is */
     if( AntReadAppMessageBuffer() )
     {
     /* New data message: check what it is */
       if(G_eAntApiCurrentMessageClass == ANT_DATA)
-      { 
-        LCDMessage(LINE2_START_ADDR, au8DataContent); 
+      {
+        /*
+        for(u8 i = 0; i < ANT_DATA_BYTES; i++)
+        {
+          au8DataContent[2 * i] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] / 16);
+          au8DataContent[2 * i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] % 16);
+        }
+        LCDMessage(LINE2_START_ADDR, au8DataContent);
+        */
       }
+      /* The amount of the fail message you send */
+      else if(G_eAntApiCurrentMessageClass == ANT_TICK)
+      {
+        /*
+         au8TestMessage[3]++;
+         if(au8TestMessage[3] == 0)
+         {
+           au8TestMessage[2]++;
+           if(au8TestMessage[2] == 0)
+           {
+             au8TestMessage[1]++;
+           }
+         }
+        */
+      }
+      /* The count of message you send */
+      au8TestMessage[7]++;
+      if(au8TestMessage[7] == 0)
+      {
+        au8TestMessage[6]++;
+        if(au8TestMessage[6] == 0)
+        {
+          au8TestMessage[5]++;
+        }
+      }
+      AntQueueAcknowledgedMessage(ANT_CHANNEL_USERAPP, au8TestMessage);
+      for(u8 i = 0; i < ANT_DATA_BYTES; i++)
+      {
+        au8DataContent[2 * i] = HexToASCIICharUpper(au8TestMessage[i] / 16);
+        au8DataContent[2 * i + 1] = HexToASCIICharUpper(au8TestMessage[i] % 16);
+      }
+      LCDMessage(LINE2_START_ADDR, au8DataContent);
     }
-  } /* end AntReadAppMessageBuffer() */
+} /* end AntReadAppMessageBuffer() */
 
 
 
