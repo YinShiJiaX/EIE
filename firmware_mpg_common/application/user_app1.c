@@ -66,7 +66,9 @@ static u32 UserApp1_u32Timeout;                      /* Timeout counter used acr
 static AntAssignChannelInfoType UserApp1_sChannelInfo;
 static u32 u32AntDataCount;
 static u32 u32AntTickCount;
-u8 au8DataContent[] = "xxxxxxxxxxxxxxxx";
+static u8 au8DataContent[] = "xxxxxxxxxxxxxxxx";
+static u32 UserApp1_u32DataMsgCount = 0;   /* ANT_DATA packets received */
+static u32 UserApp1_u32TickMsgCount = 0;   /* ANT_TICK packets received */
 /**********************************************************************************************************************
 Function Definitions
 **********************************************************************************************************************/
@@ -121,12 +123,15 @@ void UserApp1Initialize(void)
   /* Try to queue the ANT channel setup */
   if(AntAssignChannel(&UserApp1_sChannelInfo))
   {
+    LedOff(RED);
+    LedOff(YELLOW);
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_AntChannelAssign;
   }
   else
   {
     /* The Task isn't properly initialized, so shut it down and don't run */
+    LedBlink(RED,LED_4HZ);
     DebugPrintf(" Task initialized failed\n ");
     UserApp1_StateMachine = UserApp1SM_Error;
   }
@@ -235,17 +240,19 @@ static void UserApp1SM_Idle(void)
       /* The amount of the fail message you send */
       else if(G_eAntApiCurrentMessageClass == ANT_TICK)
       {
-        /*
-         au8TestMessage[3]++;
-         if(au8TestMessage[3] == 0)
+         if(G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX] == EVENT_TRANSFER_TX_FAILED)
          {
-           au8TestMessage[2]++;
-           if(au8TestMessage[2] == 0)
-           {
-             au8TestMessage[1]++;
-           }
+          au8TestMessage[3]++;
+          if(au8TestMessage[3] == 0)
+          {
+            au8TestMessage[2]++;
+            if(au8TestMessage[2] == 0)
+            {
+              au8TestMessage[1]++;
+            }
+          }
          }
-        */
+        
       }
       /* The count of message you send */
       au8TestMessage[7]++;
