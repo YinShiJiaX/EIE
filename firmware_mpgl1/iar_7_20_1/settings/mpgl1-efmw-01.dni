@@ -9,11 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-<<<<<<< HEAD
-Checksum=-583686225
-=======
-Checksum=1464341029
->>>>>>> c080c694e6eb3b5db5c649699ab09d322b1ac0ae
+Checksum=1494233523
 [JLinkDriver]
 CStepIntDis=_ 0
 WatchCond=_ 0
@@ -48,12 +44,23 @@ UnspecRange=1
 ActionState=1
 [CodeCoverage]
 Enabled=_ 0
+[RegisterFilter]
+FilePath=_ ""
+UseFilter=_ 0
+[struct_types]
+Fmt0=struct <Unnamed 12>-AntFlags	4	0
+[array_types]
+Fmt0=u8[17]	4	0
+Fmt1=u8[8]	3	0
 [watch_formats]
-Fmt0={W}1:u32AntDataCount	3	0
-Fmt1={W}1:u32AntTickCount	3	0
+Fmt0={W}1:G_u32AntFlags	4	0
 [Trace1]
 Enabled=0
 ShowSource=1
+[Disassemble mode]
+mode=0
+[Breakpoints2]
+Count=0
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -61,6 +68,9 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
+[Aliases]
+Count=0
+SuppressDialog=0
 [DriverProfiling]
 Enabled=0
 Mode=1
@@ -71,13 +81,3 @@ Exclusions=
 Enabled=0
 [CallStackStripe]
 ShowTiming=1
-[Disassemble mode]
-mode=0
-[Breakpoints2]
-Count=0
-[Aliases]
-A0=_ "C:\Users\jiage\Desktop\EIE\Razor_Atmel-application_board_test_mpg1\firmware_mpg_common\cmsis\core_cm3.h" ""
-A1=_ "C:\Users\jiage\Desktop\EIE\Razor_Atmel-application_board_test_mpg1\firmware_mpgl1\drivers\sdcard.c" ""
-A2=_ "C:\Users\jiage\Desktop\Firmware\Razor_Atmel-application_board_test_mpg1\firmware_mpg_common\cmsis\core_cm3.h" ""
-Count=3
-SuppressDialog=1

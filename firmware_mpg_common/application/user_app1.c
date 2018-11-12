@@ -69,6 +69,7 @@ static u32 u32AntTickCount;
 static u8 au8DataContent[] = "xxxxxxxxxxxxxxxx";
 static u32 UserApp1_u32DataMsgCount = 0;   /* ANT_DATA packets received */
 static u32 UserApp1_u32TickMsgCount = 0;   /* ANT_TICK packets received */
+static u8 Key = 0;
 /**********************************************************************************************************************
 Function Definitions
 **********************************************************************************************************************/
@@ -114,12 +115,14 @@ void UserApp1Initialize(void)
   UserApp1_sChannelInfo.AntTransmissionType = ANT_TRANSMISSION_TYPE_USERAPP;
   UserApp1_sChannelInfo.AntTxPower          = ANT_TX_POWER_USERAPP;
   UserApp1_sChannelInfo.AntNetwork          = ANT_NETWORK_DEFAULT;
-  
-  for(u8 i = 0; i < ANT_NETWORK_NUMBER_BYTES; i++)
-  {
-    UserApp1_sChannelInfo.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
-  }
-  
+  UserApp1_sChannelInfo.AntNetworkKey[0]    = 0xB9;
+  UserApp1_sChannelInfo.AntNetworkKey[1]    = 0xA5;
+  UserApp1_sChannelInfo.AntNetworkKey[2]    = 0x21;
+  UserApp1_sChannelInfo.AntNetworkKey[3]    = 0xFB;
+  UserApp1_sChannelInfo.AntNetworkKey[4]    = 0xBD;
+  UserApp1_sChannelInfo.AntNetworkKey[5]    = 0x72;
+  UserApp1_sChannelInfo.AntNetworkKey[6]    = 0xC3;
+  UserApp1_sChannelInfo.AntNetworkKey[7]    = 0x45;
   /* Try to queue the ANT channel setup */
   if(AntAssignChannel(&UserApp1_sChannelInfo))
   {
@@ -196,46 +199,28 @@ static void UserApp1SM_AntChannelAssign()
 static void UserApp1SM_Idle(void)
 {
     static u8 au8TestMessage[] = {0x5B, 0, 0, 0, 0xff, 0, 0, 0};
-    /*
-    au8TestMessage[1] = 0x00;
-    if(IsButtonPressed(BUTTON0))
-    {
-      au8TestMessage[1] = 0xff;
-    }
-    
-    au8TestMessage[2] = 0x00;
-    if(IsButtonPressed(BUTTON1))
-    {
-      au8TestMessage[2] = 0xff;
-    }
-    
-    au8TestMessage[3] = 0x00;
-    if(IsButtonPressed(BUTTON2))
-    {
-      au8TestMessage[3] = 0xff;
-    }
-    au8TestMessage[4] = 0x00;
-    if(IsButtonPressed(BUTTON3))
-    {
-      au8TestMessage[4] = 0xff;
-    }
-    */
-    /* We got some data: parse it into au8DataCount[] */
 
-     /* New message from ANT task: check what it is */
+    /* New message from ANT task: check what it is */
     if( AntReadAppMessageBuffer() )
     {
     /* New data message: check what it is */
       if(G_eAntApiCurrentMessageClass == ANT_DATA)
       {
-        /*
-        for(u8 i = 0; i < ANT_DATA_BYTES; i++)
+        Key = (G_au8AntApiCurrentMessageBytes[0] & 0x7f);
+        switch(Key)
         {
-          au8DataContent[2 * i] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] / 16);
-          au8DataContent[2 * i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] % 16);
+        case 0:
+          Key = NumberToAscii(G_au8AntApiCurrentMessageBytes[7], au8DataContent);
+          break;
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 7:
+        case 8:
         }
         LCDMessage(LINE2_START_ADDR, au8DataContent);
-        */
       }
       /* The amount of the fail message you send */
       else if(G_eAntApiCurrentMessageClass == ANT_TICK)
@@ -270,7 +255,7 @@ static void UserApp1SM_Idle(void)
         au8DataContent[2 * i] = HexToASCIICharUpper(au8TestMessage[i] / 16);
         au8DataContent[2 * i + 1] = HexToASCIICharUpper(au8TestMessage[i] % 16);
       }
-      LCDMessage(LINE2_START_ADDR, au8DataContent);
+      //LCDMessage(LINE2_START_ADDR, au8DataContent);
     }
 } /* end AntReadAppMessageBuffer() */
 
