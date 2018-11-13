@@ -66,7 +66,8 @@ static u32 UserApp1_u32Timeout;                      /* Timeout counter used acr
 static AntAssignChannelInfoType UserApp1_sChannelInfo;
 static u32 u32AntDataCount;
 static u32 u32AntTickCount;
-static u8 au8DataContent[] = "xxxxxxxxxxxxxxxx";
+static u8 au8DataContent_Rate[] = "xxx";
+static u8 au8DataContent_Battery[] = "xxx";
 static u32 UserApp1_u32DataMsgCount = 0;   /* ANT_DATA packets received */
 static u32 UserApp1_u32TickMsgCount = 0;   /* ANT_TICK packets received */
 static u8 Key = 0;
@@ -101,7 +102,7 @@ void UserApp1Initialize(void)
   /* Set the message up on the LCD,Delay is required to let the clear command send */
   LCDCommand(LCD_CLEAR_CMD);
   for(u32 i = 0; i < 10000; i++);
-  LCDMessage(LINE1_START_ADDR, au8WelcomeMessage);
+  //LCDMessage(LINE1_START_ADDR, au8WelcomeMessage);
   
   /* Configure ANT for this application */
   UserApp1_sChannelInfo.AntChannel          = ANT_CHANNEL_USERAPP;
@@ -198,8 +199,24 @@ static void UserApp1SM_AntChannelAssign()
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-    static u8 au8TestMessage[] = {0x5B, 0, 0, 0, 0xff, 0, 0, 0};
-
+    static u8 au8CommonDataPage_B[8] = {0x46, 0xff, 0xff, 0xff, 0xff, 0x80, 0x07, 0x01};
+    static u8 au8CommonDataPage_R[8] = {0x4C, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01};
+    static u8 au8CommonDataPage_S[8] = {0x4C, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x05};
+    /**/
+    if(WasButtonPressed(BUTTON3))
+    {
+      ButtonAcknowledge(BUTTON3);
+      AntQueueAcknowledgedMessage(ANT_CHANNEL_0, au8CommonDataPage_B);
+    }
+    if(WasButtonPressed(BUTTON1))
+    {
+      ButtonAcknowledge(BUTTON1);
+      AntQueueAcknowledgedMessage(ANT_CHANNEL_0, au8CommonDataPage_R);
+    }
+    if(WasButtonPressed(BUTTON2))
+    {
+      AntQueueAcknowledgedMessage(ANT_CHANNEL_0, au8CommonDataPage_S);
+    }
     /* New message from ANT task: check what it is */
     if( AntReadAppMessageBuffer() )
     {
@@ -209,53 +226,29 @@ static void UserApp1SM_Idle(void)
         Key = (G_au8AntApiCurrentMessageBytes[0] & 0x7f);
         switch(Key)
         {
-        case 0:
-          Key = NumberToAscii(G_au8AntApiCurrentMessageBytes[7], au8DataContent);
-          break;
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-        case 7:
-        case 8:
+          case 0:
+            Key = NumberToAscii(G_au8AntApiCurrentMessageBytes[7], au8DataContent_Rate);
+            LCDCommand(LCD_CLEAR_CMD);
+            LCDMessage(LINE2_START_ADDR, au8DataContent_Rate);
+            break;
+          case 1:
+          case 2:
+          case 3:
+          case 4:
+          case 5:
+          case 7:
+            Key = NumberToAscii(G_au8AntApiCurrentMessageBytes[1], au8DataContent_Battery);
+            LCDCommand(LCD_CLEAR_CMD);
+            LCDMessage(LINE1_START_ADDR, au8DataContent_Battery);
+            break;
+          case 8:
         }
-        LCDMessage(LINE2_START_ADDR, au8DataContent);
       }
-      /* The amount of the fail message you send */
+      /* The process for the ANT_TICK message */
       else if(G_eAntApiCurrentMessageClass == ANT_TICK)
       {
-         if(G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX] == EVENT_TRANSFER_TX_FAILED)
-         {
-          au8TestMessage[3]++;
-          if(au8TestMessage[3] == 0)
-          {
-            au8TestMessage[2]++;
-            if(au8TestMessage[2] == 0)
-            {
-              au8TestMessage[1]++;
-            }
-          }
-         }
-        
+        //AntQueueAcknowledgedMessage(ANT_CHANNEL_0, au8CommonDataPage_B);
       }
-      /* The count of message you send */
-      au8TestMessage[7]++;
-      if(au8TestMessage[7] == 0)
-      {
-        au8TestMessage[6]++;
-        if(au8TestMessage[6] == 0)
-        {
-          au8TestMessage[5]++;
-        }
-      }
-      AntQueueAcknowledgedMessage(ANT_CHANNEL_USERAPP, au8TestMessage);
-      for(u8 i = 0; i < ANT_DATA_BYTES; i++)
-      {
-        au8DataContent[2 * i] = HexToASCIICharUpper(au8TestMessage[i] / 16);
-        au8DataContent[2 * i + 1] = HexToASCIICharUpper(au8TestMessage[i] % 16);
-      }
-      //LCDMessage(LINE2_START_ADDR, au8DataContent);
     }
 } /* end AntReadAppMessageBuffer() */
 
