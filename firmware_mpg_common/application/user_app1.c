@@ -67,7 +67,7 @@ static AntAssignChannelInfoType UserApp1_sChannelInfo;
 static u32 u32AntDataCount;
 static u32 u32AntTickCount;
 static u8 au8DataContent_Rate[] = "xxx";
-static u8 au8DataContent_Battery[] = "xxx";
+static u8 au8DataContent_Battery[] = "   ";
 static u32 UserApp1_u32DataMsgCount = 0;   /* ANT_DATA packets received */
 static u32 UserApp1_u32TickMsgCount = 0;   /* ANT_TICK packets received */
 static u8 Key = 0;
@@ -229,6 +229,7 @@ static void UserApp1SM_Idle(void)
           case 0:
             Key = NumberToAscii(G_au8AntApiCurrentMessageBytes[7], au8DataContent_Rate);
             LCDCommand(LCD_CLEAR_CMD);
+            LCDMessage(LINE2_START_ADDR + 3, "n/s");
             LCDMessage(LINE2_START_ADDR, au8DataContent_Rate);
             break;
           case 1:
@@ -239,6 +240,9 @@ static void UserApp1SM_Idle(void)
           case 7:
             Key = NumberToAscii(G_au8AntApiCurrentMessageBytes[1], au8DataContent_Battery);
             LCDCommand(LCD_CLEAR_CMD);
+            LCDMessage(LINE2_START_ADDR + 3, "n/s");
+            LCDMessage(LINE1_START_ADDR + 3, "%");
+            LCDMessage(LINE2_START_ADDR, au8DataContent_Rate);
             LCDMessage(LINE1_START_ADDR, au8DataContent_Battery);
             break;
           case 8:
