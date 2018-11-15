@@ -129,6 +129,10 @@ void UserApp1Initialize(void)
   {
     LedOff(RED);
     LedOff(YELLOW);
+    LedOff(BLUE);
+    LedOn(LCD_RED);
+    LedOn(LCD_GREEN);
+    LedOn(LCD_BLUE);
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_AntChannelAssign;
   }
@@ -199,53 +203,111 @@ static void UserApp1SM_AntChannelAssign()
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-    static u8 au8CommonDataPage_B[8] = {0x46, 0xff, 0xff, 0xff, 0xff, 0x80, 0x07, 0x01};
-    static u8 au8CommonDataPage_R[8] = {0x4C, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01};
-    static u8 au8CommonDataPage_S[8] = {0x4C, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x05};
-    /**/
+    /* Command to Get the battery page */
+    static u8 au8CommonDataPage_B[8]   = {0x46, 0xff, 0xff, 0xff, 0xff, 0x80, 0x07, 0x01};
+    /* Command to Get the manufacturer information page */
+    static u8 au8CommonDataPage_MID[8] = {0x46, 0xff, 0xff, 0xff, 0xff, 0x80, 0x02, 0x01};
+    /* Command to change to run mode */
+    static u8 au8CommonDataPage_R[8]   = {0x4C, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01};
+    /* Command to change to swim mode */
+    static u8 au8CommonDataPage_S[8]   = {0x4C, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x05};
+    /* If BUTTON3 was pressed the HRM will transmit the battery page */
     if(WasButtonPressed(BUTTON3))
     {
       ButtonAcknowledge(BUTTON3);
       AntQueueAcknowledgedMessage(ANT_CHANNEL_0, au8CommonDataPage_B);
     }
+    /* If BUTTON1 was pressed the slave transmit the run mode change page to change the mode*/
     if(WasButtonPressed(BUTTON1))
     {
       ButtonAcknowledge(BUTTON1);
       AntQueueAcknowledgedMessage(ANT_CHANNEL_0, au8CommonDataPage_R);
     }
+    /* If BUTTON1 was pressed the slave transmit the swim mode change page to change the mode*/
     if(WasButtonPressed(BUTTON2))
     {
       AntQueueAcknowledgedMessage(ANT_CHANNEL_0, au8CommonDataPage_S);
     }
-    /* New message from ANT task: check what it is */
+    /* Read buffer */
     if( AntReadAppMessageBuffer() )
     {
     /* New data message: check what it is */
       if(G_eAntApiCurrentMessageClass == ANT_DATA)
       {
+        /* Check which message it is */
         Key = (G_au8AntApiCurrentMessageBytes[0] & 0x7f);
         switch(Key)
-        {
+        { 
+          /* Page 0 */
           case 0:
             Key = NumberToAscii(G_au8AntApiCurrentMessageBytes[7], au8DataContent_Rate);
             LCDCommand(LCD_CLEAR_CMD);
-            LCDMessage(LINE2_START_ADDR + 3, "n/s");
+            LCDMessage(LINE2_START_ADDR + 3, "n/min");
             LCDMessage(LINE2_START_ADDR, au8DataContent_Rate);
+            LCDMessage(LINE1_START_ADDR + 3, "%");
+            LCDMessage(LINE1_START_ADDR, au8DataContent_Battery);
+            LCDMessage(LINE1_START_ADDR + 10, "17-C-201");
+            if(G_au8AntApiCurrentMessageBytes[7] >= 100 || G_au8AntApiCurrentMessageBytes[7] <= 50)
+            {
+              LedOff(LCD_GREEN);
+              LedOff(LCD_BLUE);
+            }
+            else
+            {
+              LedOn(LCD_GREEN);
+              LedOn(LCD_BLUE); 
+            }
             break;
+          /* Page 1 */
           case 1:
+            break;
+          /* Page 2 */
           case 2:
+            break;
+          /* Page 3 */
           case 3:
+            break;
+          /* Page 4 */
           case 4:
+            break;
+          /* Page 5 */
           case 5:
+            break;
+          /* Page 6 */
+          case 6:
+            break;
+          /* Page 7 */
           case 7:
             Key = NumberToAscii(G_au8AntApiCurrentMessageBytes[1], au8DataContent_Battery);
             LCDCommand(LCD_CLEAR_CMD);
-            LCDMessage(LINE2_START_ADDR + 3, "n/s");
+            LCDMessage(LINE2_START_ADDR + 3, "n/min");
             LCDMessage(LINE1_START_ADDR + 3, "%");
             LCDMessage(LINE2_START_ADDR, au8DataContent_Rate);
             LCDMessage(LINE1_START_ADDR, au8DataContent_Battery);
+            LCDMessage(LINE1_START_ADDR + 10, "17-C-201");
+            if(G_au8AntApiCurrentMessageBytes[1] <= 30)
+            {
+              LedOn(RED);
+              LedOff(GREEN);
+              LedOff(YELLOW);
+            }
+            else if(G_au8AntApiCurrentMessageBytes[1] <= 70 && G_au8AntApiCurrentMessageBytes[1] > 30)
+            {
+              LedOn(YELLOW);
+              LedOff(RED);
+              LedOff(GREEN);
+            }
+            else 
+            {
+              LedOn(GREEN);
+              LedOff(YELLOW);
+              LedOff(RED);
+            }
+            
             break;
+          /* Page 8 */
           case 8:
+            break;
         }
       }
       /* The process for the ANT_TICK message */
